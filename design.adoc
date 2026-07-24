@@ -1,0 +1,126 @@
+= Puzzlefin — System Design Document
+Bill <destein@puzzle.io>
+v0.1, 2026-07-14
+:toc: left
+:toclevels: 3
+:sectnums:
+:icons: font
+:source-highlighter: highlight.js
+:imagesdir: images
+
+// ^ The header block above drives the "professional" look:
+//   :toc: left      -> auto table of contents in a left sidebar
+//   :toclevels: 3   -> include heading levels 1-3 in the TOC
+//   :sectnums:      -> automatic section numbering (1, 1.1, 1.2 ...)
+//   :icons: font    -> nice admonition icons (NOTE/TIP/WARNING)
+// Open this file in VS Code and press Cmd+K then V for side-by-side preview.
+
+[abstract]
+This document describes the architecture of the Puzzlefin system. It is a
+starter template that demonstrates AsciiDoc features — heading levels, an
+automatic table of contents, tables, admonitions, code blocks, images, and
+diagrams. Replace the placeholder text as you go.
+
+== Overview
+
+Puzzlefin is a three-tier web application. This section explains what the
+system does and who uses it in plain prose.
+
+You can format text with *bold*, _italic_, `monospace`, and add footnotes
+like this.footnote:[Footnotes render at the bottom of the document.]
+
+TIP: Admonition blocks (TIP, NOTE, IMPORTANT, WARNING, CAUTION) are a
+built-in AsciiDoc feature and render as nicely styled callouts.
+
+== Goals and Non-Goals
+
+.Goals
+* Serve partner-facing API traffic reliably
+* Provide a clean presentation tier for end users
+* Persist data durably
+
+.Non-Goals
+* Real-time streaming analytics (out of scope for v1)
+* Native mobile applications
+
+== Architecture
+
+=== System Context
+
+A short paragraph describing how the system sits relative to users and
+external services. The diagram below is defined *as code* and rendered by
+Asciidoctor Diagram (see note).
+
+[plantuml, system-context, svg]
+----
+@startuml
+skinparam componentStyle rectangle
+actor User
+rectangle Puzzlefin {
+  [Web App\n(Presentation)] as web
+  [API\n(Business Logic)] as api
+  database "Database\n(Data Tier)" as db
+}
+[External Service] as ext
+User --> web
+web --> api
+api --> db
+api --> ext
+@enduml
+----
+
+NOTE: Diagram-as-code blocks (PlantUML/Mermaid) require the *Asciidoctor
+Diagram* extension or *Kroki*. In the VS Code AsciiDoc extension, enable
+`asciidoc.extensions.enableKroki` in Settings to render them in preview.
+If it doesn't render yet, see the image-based approach in <<deployment>>.
+
+=== Component View
+
+[cols="1,2,1", options="header"]
+|===
+| Component | Responsibility | Technology
+
+| Web App | Presentation, client-side state | React
+| API | Business logic, auth, orchestration | Node / GraphQL
+| Database | Persistence | PostgreSQL
+|===
+
+== Data Model
+
+Describe entities and relationships here. You can embed source code with
+syntax highlighting:
+
+[source,sql]
+----
+CREATE TABLE document (
+    id         UUID PRIMARY KEY,
+    title      TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+----
+
+[#deployment]
+== Deployment
+
+For freeform, Lucidchart-style pictures, draw them in draw.io, export an SVG
+into the `images/` folder, and reference it like this:
+
+image::deployment-topology.svg[Deployment topology, 600, align=center]
+
+WARNING: The image above will show a "not found" placeholder until you add
+`images/deployment-topology.svg`. That's expected in this starter.
+
+== Cross-Cutting Concerns
+
+Security:: OAuth 2.0 + OpenID Connect, FAPI-aligned for partner APIs.
+Observability:: Logging, metrics, tracing.
+Reliability:: SLOs, backups, failure modes.
+
+== Open Questions
+
+* [ ] Question one
+* [ ] Question two
+
+== References
+
+* Link to related docs, RFCs, and tickets.
