@@ -14,6 +14,12 @@
 
 1. [Overview](#overview)
 2. [Services and Repositories](#services-and-repositories)
+   1. [gateway](#gateway)
+   2. [ledger](#ledger)
+   3. [goledger](#goledger)
+   4. [accounting](#accounting)
+   5. [gopzevents](#gopzevents)
+   6. [gopzdata](#gopzdata)
 3. [Architecture](#architecture)
    1. [System Context](#system-context)
    2. [Component View](#component-view)
@@ -44,6 +50,62 @@ The accounting engine spans six repositories:
 | `accounting` | Python | Accrual computations — revenue schedules from invoice/subscription data |
 | `gopzevents` | Go | Events service — the eventing backbone for the Go-era stack |
 | `gopzdata` | Go | Data service — company data store that goledger syncs into |
+
+### gateway
+
+A TypeScript/Node.js monolith on GCP, deployed two ways from one codebase:
+an API mode (App Engine) and a worker mode (Cloud Run). It ingests data from
+integration sources (banks, payment processors, payroll providers),
+normalizes it into the financial graph in its own PostgreSQL database,
+categorizes transactions, and emits events to the ledger. It serves three
+API surfaces: internal GraphQL for the web app, partner GraphQL, and the
+external REST API, whose OpenAPI spec it generates from Zod contracts.
+
+### ledger
+
+The core accounting engine, in Python: the ledger journal (journal entries
+originating from ledger events) and the chart of accounts. Designed to be
+immutable (append-only), correctable, and bitemporal — the accounting source
+of truth. It owns its own PostgreSQL schema, uses Bigtable for fast balance
+access, and serves most ledger API requests from the gateway, including
+financial reporting and ledger account creation.
+
+### goledger
+
+A Go reimplementation of ledger functionality, built for speed and
+concurrency and ultimately intended to replace the Python ledger. Today it
+exclusively processes events for companies with a custom chart of accounts
+(BYOCOA), generates payroll journal mappings, and syncs companies to the
+Data Service. It owns no schema of its own, riding on the ledger's
+PostgreSQL and Bigtable stores.
+
+### accounting
+
+The Accounting Service, in Python, handles accrual-related work — for
+example, building schedules of recurring revenue events from invoice and
+subscription data. It owns its own PostgreSQL schema and publishes events
+the ledger consumes. It calls the ledger and gateway over HTTP, and also
+reads the gateway's database directly via a read-only replica — an access
+path intended to be replaced by dedicated gateway endpoints.
+
+### gopzevents
+
+The Puzzle Events Service builds and validates events and transforms them
+into ledger journal events. In the Go-ledger flow, the ledger forwards
+events here; the Events Service resolves CoA keys and accounts (consulting
+the Data Service as needed), applies its accounting logic, and returns a
+journal event the ledger can persist without further interpretation. It is
+intended to become the only service that transforms events into journal
+entries; today the Python ledger still uses its own logic.
+
+### gopzdata
+
+The Puzzle Data Service makes selected data from one service available to
+all others — a "one writer, many readers" model where each mapping type has
+a single owning writer and any service may read. Mappings are backed by
+Bigtable for fast access. It is explicitly not primary storage: owners keep
+their data in their own databases and sync it promptly. goledger syncs
+companies in; the Events Service reads CoA-key and account mappings out.
 
 ## Architecture
 
