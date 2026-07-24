@@ -1,8 +1,8 @@
 # Appendix: scaling-the-ledger
 
 > Staged 2026-07-24. Not yet merged into architecture.md.
-> Primary source: `ledger/docs/decisions/001-go-ledger.md` (ADR, 2025-07-16,
-> Accepted).
+> Primary sources: `ledger/docs/decisions/001-go-ledger.md` (ADR, 2025-07-16,
+> Accepted); `goledger/locks/README.md`.
 
 **Q: Is the ledger CPU-bound, and is the Go rewrite a form of vertical
 scaling that suggests the ledger team has not solved horizontal
@@ -38,11 +38,27 @@ horizontal-scaling problem at all: a double-entry journal demands ordered,
 consistent application of events, so the safe-and-simple answer is a
 whole-company lock — and adding workers does nothing when they all queue on
 the same lock. The biggest company is the slowest company, and no fleet size
-fixes it. The Go effort attacks exactly that constraint: language-level
-concurrency (which the GIL forbade) plus the decomposition — `gopzevents` as
-a *stateless* event-to-journal transformer (horizontally scalable by
-construction) and `gopzdata` for lock-free reference reads — to shrink what
-actually has to serialize inside the company lock.
+fixes it.
+
+**What "concurrent processing of events for a single company" actually
+means: concurrency between events, not within an event.** No single
+request or event is decomposed into parallel parts — one event's
+transformation into a journal entry is small, sequential work. What changes
+is the collision radius. The Python ledger takes one lock on the entire
+company and processes its events strictly one at a time, end to end.
+goledger replaces that with fine-grained, Redis-backed distributed locks —
+its `locks` package hosts `EventsLock`, `BatchLock`, `JobLock`, and
+`BalanceLock` as separate scopes — so two batches for the same company that
+don't touch the same contended resource no longer wait on each other; only
+operations that genuinely conflict (e.g., updating the same balance)
+serialize, under the narrowest lock that protects the invariant. Two things
+make that concurrency real: Go's runtime (under Python's GIL, one process
+could not execute two events' CPU work simultaneously even with finer
+locks), and the decomposition — `gopzevents` as a *stateless*
+event-to-journal transformer is the naturally parallel middle of the
+pipeline, with `gopzdata` providing lock-free reference reads; the
+order-sensitive tail (journal persistence, balance updates) is where the
+narrow locks still impose sequence.
 
 **Verdict:** not "vertical because horizontal defeated them," but "the hot
 constraint is a per-company ordering invariant that horizontal scaling
