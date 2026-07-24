@@ -2,7 +2,7 @@
 
 > **Status:** Draft · **Owner:** Bill DeStein · **Last updated:** 2026-07-24
 >
-> Sections merged so far: Services and Repositories · Inter-Service Communication.
+> Sections merged so far: Services and Repositories · Inter-Service Communication · Databases.
 
 ---
 
@@ -22,6 +22,7 @@
    6. [gopzdata](#gopzdata)
 3. [Inter-Service Communication](#inter-service-communication)
    1. [Edge-by-Edge](#edge-by-edge)
+4. [Databases](#databases)
 
 ---
 
@@ -159,3 +160,47 @@ gateway and are shown for context.
 | goledger | gopzevents | HTTP | Sends events for transformation into ledger journal events |
 | gopzevents | gopzdata | HTTP | Resolves CoA keys, external accounts, automation accounts |
 | goledger | gopzdata | HTTP | Syncs companies in ("one writer" for company mappings) |
+
+## Databases
+
+Four primary stores plus two shared caching layers. The rule is one
+PostgreSQL database per service, with the owning service holding the schema
+and its migrations; services otherwise integrate through APIs and events,
+never each other's tables.
+
+```mermaid
+flowchart TB
+    gw[gateway]
+    pyledger[ledger &#40;Python&#41;]
+    goledger[goledger]
+    acct[accounting]
+    data[gopzdata]
+
+    gwpg[(Gateway Postgres)]
+    ledgerpg[(Ledger Postgres)]
+    acctpg[(Accounting Postgres)]
+    bt[(Bigtable)]
+    redis[(Redis)]
+
+    gw --> gwpg
+    acct -.->|read-only replica| gwpg
+    pyledger --> ledgerpg
+    goledger -->|no schema of its own| ledgerpg
+    acct --> acctpg
+    pyledger --> bt
+    goledger --> bt
+    data -->|mappings: one writer, many readers| bt
+    gw -.->|sqcache reads| bt
+    gw -.-> redis
+```
+
+Solid arrows are owning or writing relationships; dashed arrows are
+read-only or cache access.
+
+| Store | Owner (schema + writes) | Also accessed by | Contents |
+|-------|------------------------|------------------|----------|
+| Gateway Postgres (CloudSQL) | `gateway` (TypeORM) | `accounting` — direct read-only replica access | The financial graph: companies, users, integrations, accounts, transactions, bills, invoices |
+| Ledger Postgres | `ledger` (Alembic; bitemporality via the `temporal_tables_puzzle` fork) | `goledger` — reads and writes via `pgx`, owns no schema | The books: journal entries, chart of accounts — append-only source of truth |
+| Accounting Postgres | `accounting` (Alembic) | — | Accrual schedules, recurring revenue events |
+| Bigtable | Split by table: ledger balance data (`ledger`/`goledger`); mapping tables (`gopzdata`) | `gateway` reads ledger-managed cache entries (`sqcache`); `gopzevents` reads mappings via the data service | Fast-access balances; cross-service shared mappings |
+| Redis | n/a — cache, not a system of record | `gateway` (sessions, rate limiting, caching); distributed locks (`redishilok`) | Ephemeral cache |
