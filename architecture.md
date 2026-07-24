@@ -20,17 +20,6 @@
    4. [accounting](#accounting)
    5. [gopzevents](#gopzevents)
    6. [gopzdata](#gopzdata)
-3. [Architecture](#architecture)
-   1. [System Context](#system-context)
-   2. [Component View](#component-view)
-4. [Data Stores](#data-stores)
-5. [Events and Messaging](#events-and-messaging)
-6. [Key Flows](#key-flows)
-7. [External API](#external-api)
-8. [Deployment](#deployment)
-9. [Cross-Cutting Concerns](#cross-cutting-concerns)
-10. [Open Questions](#open-questions)
-11. [References](#references)
 
 ---
 
@@ -106,45 +95,3 @@ a single owning writer and any service may read. Mappings are backed by
 Bigtable for fast access. It is explicitly not primary storage: owners keep
 their data in their own databases and sync it promptly. goledger syncs
 companies in; the Events Service reads CoA-key and account mappings out.
-
-## Architecture
-
-### System Context
-
-<!-- to be written -->
-
-### Component View
-
-<!-- to be written -->
-
-## Data Stores
-
-<!-- to be written -->
-
-## Events and Messaging
-
-<!-- to be written -->
-
-## Key Flows
-
-<!-- to be written -->
-
-## External API
-
-<!-- to be written -->
-
-## Deployment
-
-<!-- to be written -->
-
-## Cross-Cutting Concerns
-
-<!-- to be written -->
-
-## Open Questions
-
-<!-- to be written -->
-
-## References
-
-<!-- to be written -->
