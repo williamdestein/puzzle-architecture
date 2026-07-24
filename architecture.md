@@ -22,8 +22,6 @@
    6. [gopzdata](#gopzdata)
 3. [Inter-Service Communication](#inter-service-communication)
    1. [Edge-by-Edge](#edge-by-edge)
-   2. [The Go-Era Event Relay](#the-go-era-event-relay)
-   3. [Verification Notes](#verification-notes)
 
 ---
 
@@ -161,18 +159,3 @@ gateway and are shown for context.
 | goledger | gopzevents | HTTP | Sends events for transformation into ledger journal events |
 | gopzevents | gopzdata | HTTP | Resolves CoA keys, external accounts, automation accounts |
 | goledger | gopzdata | HTTP | Syncs companies in ("one writer" for company mappings) |
-
-### The Go-Era Event Relay
-
-For a custom-CoA company, one ledger event travels: gateway → (Pub/Sub) →
-goledger → (HTTP) → gopzevents → (HTTP, lookups) → gopzdata → journal event
-returned → goledger persists it to the ledger's stores. The Events Service
-is intended to become the *only* transformer of events into journal entries;
-the Python ledger still uses its own logic.
-
-### Verification Notes
-
-Reverse directions (e.g., goledger → gateway) have not been exhaustively
-swept; an absent edge means no evidence was found, not proven absence. The
-"Ledger" in the Events Service's documented flow reads as the Go ledger for
-custom-CoA traffic; the Python ledger does not use the Events Service.
