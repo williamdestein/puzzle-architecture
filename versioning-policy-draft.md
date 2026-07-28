@@ -16,6 +16,8 @@ Every API change is exactly one of:
 
 Clients are expected to be tolerant: unknown response fields and unknown enum values must not be treated as errors. We state this in the public docs; it is what makes "additive" safe.
 
+Additive changes are contract-first: the field or endpoint is added to the Zod contract (and thus the published spec) before or with the code that puts it on the wire. A field observed on the wire that the contract does not model is not an additive change — it is a process failure, and drift detection will flag it as one.
+
 ## Rules for a breaking need
 
 When a change looks breaking, walk this ladder — stopping at the first rung that works:
