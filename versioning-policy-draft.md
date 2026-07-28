@@ -32,6 +32,12 @@ When a change looks breaking, walk this ladder — stopping at the first rung th
 2. **Deprecate, don't remove.** Mark the old element `deprecated: true` in the contract (renders as a badge in the docs), announce a sunset date in the changelog, keep serving it. Deprecation queues removal; it never performs it.
 3. **Add it to the next-major wishlist.** Actual removals and reshapes ship only in a coordinated whole-surface major bump: `/rest/v1` cut for *every* endpoint at once, v0 dual-served through a published sunset window (minimum 12 months for a stable major).
 
+### What a major bump means operationally
+
+Cutting `/rest/v1` does not modify, move, or turn off `/rest/v0` — it adds a new base path beside the old one. Because the version is in the URL, every request names the contract it wants, and the gateway serves both versions simultaneously for the entire overlap window. A partner who does nothing experiences nothing: the day after v1 ships, `/rest/v0/bills` answers exactly as it did the day before. There is no flag day and no forced upgrade.
+
+Partners migrate one at a time, on their own schedule, using a migration guide generated from the spec diff — an exact, finite list of what changed, not folklore. The only event that can break an integration is v0's eventual shutdown, which is a separate, later decision governed by the published sunset window, deprecation notices, and direct partner communication — and which may reasonably never come while meaningful traffic remains. In the limiting case where a major is cut purely as a stability promotion (zero breaking diffs), the two versions are the same API under two prefixes, and migration is a one-segment URL edit.
+
 ## Current status: v0
 
 `v0` is **pre-stable**: breaking changes are permitted with notice (changelog + direct partner communication, minimum 30 days), and no major bump is owed for them. This window is for fixing what the old spec-generation era got wrong — it will not be extended by habit.
