@@ -2,9 +2,13 @@
 
 > **Status:** Draft for review · **Applies to:** the REST API at `/rest/*` and its generated OpenAPI spec
 
-## Version identity
+## API versions and endpoint versions
 
-The API has exactly one version dimension: the **major version in the URL** (`https://api.puzzle.io/rest/v0`). One OpenAPI document exists per major version, served at `/rest/<version>/openapi.json`; the `paths` within it are unversioned. The document's `info.version` records the spec revision within a major and moves freely; the URL version moves rarely and deliberately. **Individual endpoints are never versioned** — there is no `/v1/bills` next to `/v0/bills`, ever.
+Two notions of "version" come up when discussing an API, and this policy deliberately supports only one of them.
+
+An **API version** is a version of the entire surface — every endpoint at once. It lives in the base URL (`https://api.puzzle.io/rest/v0`) and, in the OpenAPI document, in the `servers` entry; the `paths` within the document are unversioned. One OpenAPI document exists per API version, served at `/rest/<version>/openapi.json`. The document's `info.version` records finer spec revisions within an API version and moves freely; the URL version moves rarely and deliberately.
+
+An **endpoint version** does not exist as a first-class thing here: endpoints are never individually versioned, and there is no `/v1/bills` next to `/v0/bills`, ever. An endpoint's "version" is simply the API version it lives in. What other platforms express as "v2 of an endpoint" is expressed in this policy as the endpoint's evolution *within* an API version: the change is dissolved additively (new optional fields, or a new sibling endpoint under its own noun), or the old element is deprecated with a sunset date, or the change waits for the next whole-surface API version (the ladder in "Rules for a breaking need"). An endpoint's history is visible as its field set and its deprecation badges — never as a number in its path.
 
 ## Change taxonomy
 
