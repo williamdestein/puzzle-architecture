@@ -6,7 +6,9 @@
 
 Two notions of "version" come up when discussing an API, and this policy deliberately supports only one of them.
 
-An **API version** is a version of the entire surface — every endpoint at once. It lives in the base URL (`https://api.puzzle.io/rest/v0`) and, in the OpenAPI document, in the `servers` entry; the `paths` within the document are unversioned. One OpenAPI document exists per API version, served at `/rest/<version>/openapi.json`. The document's `info.version` records finer spec revisions within an API version and moves freely; the URL version moves rarely and deliberately.
+An **API version** is a version of the entire surface — every endpoint at once. It lives in the base URL (`https://api.puzzle.io/rest/v0`) and, in the OpenAPI document, in the `servers` entry; the `paths` within the document are unversioned. One OpenAPI document exists per API version, served at `/rest/<version>/openapi.json`. The URL version moves rarely and deliberately.
+
+Within an API version, the document's `info.version` records spec revisions as `<major>.<minor>.<patch>`: the major matches the URL version, the minor moves on additive changes, and the patch moves on editorial ones. The version is a function of the spec's *content*, never of when it was generated — the document is regenerated constantly (every deploy, every CI build), and two byte-identical documents always carry the same version. Because bumps track the change taxonomy, the version means something: a partner comparing two minors knows capabilities were added in between, not merely that time passed.
 
 An **endpoint version** is the other pattern, and you have likely used APIs built on it: the reference docs show `/v1/bill` and `/v2/bill` as live routes side by side, each endpoint carrying its own version number and moving on its own schedule. **We do not do that.** Endpoints here are never individually versioned — an endpoint's "version" is simply the API version it lives in. What those platforms express as "v2 of an endpoint" is expressed in this policy as the endpoint's evolution *within* an API version: the change is made additive instead (new optional fields, or a new sibling endpoint under its own noun), or the old element is deprecated with a sunset date, or the change waits for the next whole-surface API version (the ladder in "Rules for a breaking need"). An endpoint's history is visible as its field set and its deprecation badges — never as a number in its path.
 
@@ -38,7 +40,7 @@ When a change looks breaking, walk this ladder — stopping at the first rung th
 
 ## Enforcement
 
-The spec is generated deterministically from the Zod contracts, so classification is mechanical, not honor-system: CI diffs the generated OpenAPI document on every PR and labels the change editorial / additive / breaking. A PR carrying a breaking diff fails unless it carries the matching ritual (deprecation marker, next-major label, or — during v0 only — an approved notice plan). Production drift detection remains the backstop for what review misses.
+The spec is generated deterministically from the Zod contracts, so classification is mechanical, not honor-system: CI diffs the generated OpenAPI document on every PR and labels the change editorial / additive / breaking. A PR carrying a breaking diff fails unless it carries the matching ritual (deprecation marker, next-major label, or — during v0 only — an approved notice plan). The same gate enforces the `info.version` bump: an additive diff requires a minor bump, an editorial diff a patch bump, and no diff no bump — the version constant lives in the repo and moves in the same PR as the change it describes. Production drift detection remains the backstop for what review misses.
 
 ## Communication
 
