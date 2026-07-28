@@ -1,3 +1,7 @@
+# Appendix: versioning-policy
+
+> Staged 2026-07-28. Not yet merged into architecture.md.
+
 # Puzzle External API — Versioning Policy
 
 > **Status:** Draft for review · **Applies to:** the REST API at `/rest/*` and its generated OpenAPI spec
