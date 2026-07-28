@@ -36,7 +36,7 @@ When a change looks breaking, walk this ladder — stopping at the first rung th
 
 `v0` is **pre-stable**: breaking changes are permitted with notice (changelog + direct partner communication, minimum 30 days), and no major bump is owed for them. This window is for fixing what the old spec-generation era got wrong — it will not be extended by habit.
 
-**v1 graduation criteria** (all required): production drift detection quiet over a full close cycle; `securitySchemes` and error shapes modeled in the spec; this policy published in the developer docs; sign-off that we would honor the stable-major rules for every endpoint as-is.
+**v1 promotion criteria** (all required): production drift detection quiet over a full close cycle; `securitySchemes` and error shapes modeled in the spec; this policy published in the developer docs; sign-off that we would honor the stable-major rules for every endpoint as-is.
 
 ## Enforcement
 
