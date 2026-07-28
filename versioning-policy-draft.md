@@ -8,7 +8,7 @@ Two notions of "version" come up when discussing an API, and this policy deliber
 
 An **API version** is a version of the entire surface — every endpoint at once. It lives in the base URL (`https://api.puzzle.io/rest/v0`) and, in the OpenAPI document, in the `servers` entry; the `paths` within the document are unversioned. One OpenAPI document exists per API version, served at `/rest/<version>/openapi.json`. The document's `info.version` records finer spec revisions within an API version and moves freely; the URL version moves rarely and deliberately.
 
-An **endpoint version** is the other pattern, and you have likely used APIs built on it: the reference docs show `/v1/bill` and `/v2/bill` as live routes side by side, each endpoint carrying its own version number and moving on its own schedule. **We do not do that.** Endpoints here are never individually versioned — an endpoint's "version" is simply the API version it lives in. What those platforms express as "v2 of an endpoint" is expressed in this policy as the endpoint's evolution *within* an API version: the change is dissolved additively (new optional fields, or a new sibling endpoint under its own noun), or the old element is deprecated with a sunset date, or the change waits for the next whole-surface API version (the ladder in "Rules for a breaking need"). An endpoint's history is visible as its field set and its deprecation badges — never as a number in its path.
+An **endpoint version** is the other pattern, and you have likely used APIs built on it: the reference docs show `/v1/bill` and `/v2/bill` as live routes side by side, each endpoint carrying its own version number and moving on its own schedule. **We do not do that.** Endpoints here are never individually versioned — an endpoint's "version" is simply the API version it lives in. What those platforms express as "v2 of an endpoint" is expressed in this policy as the endpoint's evolution *within* an API version: the change is made additive instead (new optional fields, or a new sibling endpoint under its own noun), or the old element is deprecated with a sunset date, or the change waits for the next whole-surface API version (the ladder in "Rules for a breaking need"). An endpoint's history is visible as its field set and its deprecation badges — never as a number in its path.
 
 ## Change taxonomy
 
@@ -26,7 +26,7 @@ Additive changes are contract-first: the field or endpoint is added to the Zod c
 
 When a change looks breaking, walk this ladder — stopping at the first rung that works:
 
-1. **Dissolve it additively.** Add the new field beside the old; introduce a new resource noun instead of mutating an existing one.
+1. **Make it additive instead.** Add the new field beside the old; introduce a new resource noun instead of mutating an existing one. Most breaking needs stop being breaking here.
 2. **Deprecate, don't remove.** Mark the old element `deprecated: true` in the contract (renders as a badge in the docs), announce a sunset date in the changelog, keep serving it. Deprecation queues removal; it never performs it.
 3. **Add it to the next-major wishlist.** Actual removals and reshapes ship only in a coordinated whole-surface major bump: `/rest/v1` cut for *every* endpoint at once, v0 dual-served through a published sunset window (minimum 12 months for a stable major).
 
